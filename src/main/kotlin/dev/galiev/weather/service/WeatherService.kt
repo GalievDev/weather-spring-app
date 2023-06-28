@@ -3,14 +3,17 @@ package dev.galiev.weather.service
 import dev.galiev.weather.model.*
 import dev.galiev.weather.utils.API_KEY
 import org.json.JSONObject
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpMethod
+import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import java.text.SimpleDateFormat
 
 
 @Service
 class WeatherService private constructor(): MappingJackson2HttpMessageConverter() {
+    val restTemplate = RestTemplate()
     companion object {
         private val ourInstance = WeatherService()
 
@@ -23,10 +26,18 @@ class WeatherService private constructor(): MappingJackson2HttpMessageConverter(
         setPrettyPrint(true)
     }
 
-    fun getWeatherForFive(city: String): List<Example> {
+    fun getGeocode(city: String): List<Geocode> {
+        val url = "https://geocode.maps.co/search?q=$city"
+
+        val response: ResponseEntity<List<Geocode>> = restTemplate.exchange(
+                url, HttpMethod.GET, null, object: ParameterizedTypeReference<List<Geocode>>() {})
+
+        return response.body!!
+    }
+
+    fun getWeatherForFive(city: String): ArrayList<Example> {
         val webSiteResponse = "http://api.openweathermap.org/data/2.5/forecast?q=$city&mode=json&appid=${API_KEY}&units=metric"
 
-        val restTemplate = RestTemplate()
         val result: String? = restTemplate.getForObject(webSiteResponse, String::class.java)
 
         var description: String? = null
@@ -39,21 +50,13 @@ class WeatherService private constructor(): MappingJackson2HttpMessageConverter(
         var sea_level = 0
         var grnd_level = 0
 
-        var date1: java.util.Date? = null
-
-        var date: String? = null
-
         var icon: String? = null
         var weatherCondition: String? = null
         var id = 0
 
-        val weatherList: MutableList<Example> = ArrayList()
+        val weatherList: ArrayList<Example> = ArrayList()
 
         val root = JSONObject(result)
-
-        val dfoutput2 = SimpleDateFormat("HH")
-        val dfoutput1 = SimpleDateFormat("dd-MM-yyyy")
-        val dfinput = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
         val weatherObject = root.getJSONArray("list")
 
@@ -72,8 +75,6 @@ class WeatherService private constructor(): MappingJackson2HttpMessageConverter(
             icon = arrayElement.getJSONArray("weather").getJSONObject(0).getString("icon")
             weatherCondition = arrayElement.getJSONArray("weather").getJSONObject(0).getString("main")
             id = arrayElement.getJSONArray("weather").getJSONObject(0).getInt("id")
-            date = arrayElement.getString("dt_txt")
-            date1 = dfinput.parse(date)
             val fw = ForecastWeather()
             val dt = Date()
             val mn = Main()
@@ -92,11 +93,8 @@ class WeatherService private constructor(): MappingJackson2HttpMessageConverter(
             w.icon = icon
             w.id = id
             w.main = weatherCondition
-            t.time = dfoutput2.format(date1)
             t.main = mn
             t.weather = w
-            dt.setAdditionalProperty(dfoutput2.format(date1), t)
-            fw.setAdditionalProperty(dfoutput1.format(date1), dt)
             e.forecastWeather = fw
             weatherList.add(e)
         }
@@ -104,10 +102,9 @@ class WeatherService private constructor(): MappingJackson2HttpMessageConverter(
         return weatherList
     }
 
-    fun getWeather(city: String): List<Example> {
+    fun getWeather(city: String): ArrayList<Example> {
         val webSiteResponse = "http://api.openweathermap.org/data/2.5/weather?q=$city&mode=json&appid=${API_KEY}&units=metric"
 
-        val restTemplate = RestTemplate()
         val result: String? = restTemplate.getForObject(webSiteResponse, String::class.java)
 
         var description: String? = null
