@@ -12,7 +12,7 @@ object WeatherCache {
     val geocodes: MutableMap<String, Geocode> = mutableMapOf()
     val weathers: MutableMap<String, MainWeather> = mutableMapOf()
 
-    @Scheduled(fixedRate = 3000)
+    @Scheduled(fixedRate = 1800000)
     fun cacheCleanup() {
         val currentTime = LocalDateTime.now()
         val geocodeIterator = geocodes.values.iterator()
@@ -24,7 +24,7 @@ object WeatherCache {
 
             val geocodeDuration = Duration.between(geocodeTime, currentTime)
 
-            if (geocodeDuration.toSeconds() >= 3) {
+            if (geocodeDuration.toMinutes() >= 30) {
                 println("CACHE CLEANUP")
                 geocodes.clear()
                 weathers.clear()
