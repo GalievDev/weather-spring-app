@@ -29,20 +29,9 @@ Install java 17 or newer. Select the correct way for your system
    ./mvnw jar:jar
    ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ## Usage
 
 1. Run JAR file
    ```sh
    java -jar weather-spring-app-1.0.0.jar
    ```
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## License
-
-Distributed under the Apache 2.0. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-  
